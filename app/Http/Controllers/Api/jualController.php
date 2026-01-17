@@ -24,7 +24,7 @@ class jualController extends Controller
             'no_bon' => 'required|string|unique:juals,no_bon',
             'diskon' => 'required|numeric',
             'bayar' => 'required|numeric',
-            'kode_kasir' => 'required|exists:kasir,kode_kasir',
+            'kode_kasir' => 'required|exists:kasirs,kode_kasir',
             'tanggal' => 'required|date',
             'waktu' => 'required',
             'barang' => 'required|array',
@@ -89,14 +89,14 @@ class jualController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'no_bon' => 'required|string',
-            'kode_kasir' => 'required|string|exists:kasir,kode_kasir',
-            'diskon' => 'required|numeric',
-            'bayar' => 'required|numeric',
+            'no_bon' => 'nullable|string',
+            'kode_kasir' => 'nullable|string|exists:kasirs,kode_kasir',
+            'diskon' => 'nullable|numeric',
+            'bayar' => 'nullable|numeric',
 
-            'barang' => 'required|array',
-            'barang.*.kode_barang' => 'required|string|exists:barangs,kode_barang',
-            'barang.*.jumlah' => 'required|numeric|min:1',
+            'barang' => 'nuulable|array',
+            'barang.*.kode_barang' => 'nullable|string|exists:barangs,kode_barang',
+            'barang.*.jumlah' => 'nullable|numeric|min:1',
         ]);
 
         if ($validator->fails()) {
