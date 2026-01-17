@@ -49,7 +49,7 @@ class detailJualController extends Controller
     }
 
     public function show($id){
-        $detail = DetailJual::find($id);
+        $detail = DetailJual::with('barang')->find($id);
 
         return new apiResource($detail, true, 'Data Berhasil Ditampilkan');
     }

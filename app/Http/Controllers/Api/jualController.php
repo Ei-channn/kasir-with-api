@@ -94,7 +94,7 @@ class jualController extends Controller
             'diskon' => 'nullable|numeric',
             'bayar' => 'nullable|numeric',
 
-            'barang' => 'nuulable|array',
+            'barang' => 'nullable|array',
             'barang.*.kode_barang' => 'nullable|string|exists:barangs,kode_barang',
             'barang.*.jumlah' => 'nullable|numeric|min:1',
         ]);
@@ -109,28 +109,30 @@ class jualController extends Controller
             return response()->json(['message' => 'Data Tidak Ditemukan'], 404);
         }
 
-        foreach ($request->barang as $item) {
+        if ($request->has('barang')) {
+            foreach ($request->barang as $item) {
 
-            $barangData = Barang::where('kode_barang', $item['kode_barang'])->first();
+                $barangData = Barang::where('kode_barang', $item['kode_barang'])->first();
 
-            $detail = DetailJual::where('no_bon', $request->no_bon)
-                ->where('kode_barang', $item['kode_barang'])
-                ->first();
+                $detail = DetailJual::where('no_bon', $request->no_bon)
+                    ->where('kode_barang', $item['kode_barang'])
+                    ->first();
 
-            if ($detail) {
-                // Update jika sudah ada
-                $detail->update([
-                    'jumlah' => $item['jumlah'],
-                    'harga' => $barangData->harga
-                ]);
-            } else {
-                // Tambah jika belum ada
-                DetailJual::create([
-                    'no_bon' => $request->no_bon,
-                    'kode_barang' => $item['kode_barang'],
-                    'harga' => $barangData->harga,
-                    'jumlah' => $item['jumlah'],
-                ]);
+                if ($detail) {
+                    // Update jika sudah ada
+                    $detail->update([
+                        'jumlah' => $item['jumlah'],
+                        'harga' => $barangData->harga
+                    ]);
+                } else {
+                    // Tambah jika belum ada
+                    DetailJual::create([
+                        'no_bon' => $request->no_bon,
+                        'kode_barang' => $item['kode_barang'],
+                        'harga' => $barangData->harga,
+                        'jumlah' => $item['jumlah'],
+                    ]);
+                }
             }
         }
 
@@ -138,16 +140,19 @@ class jualController extends Controller
             ->selectRaw('SUM(harga * jumlah) as total')
             ->value('total');
 
+        $diskon = $request->diskon ?? 0;
+        $bayar = $request->bayar ?? 0;
+
         $kembali = $request->bayar - ($total - $request->diskon);
 
         // 4. Update tabel jual
         $jual->update([
-            'no_bon' => $request->no_bon,
+            'no_bon' => $request->no_bon ?? $jual->no_bon,
             'total' => $total,
-            'diskon' => $request->diskon,
-            'bayar' => $request->bayar,
+            'diskon' => $diskon,
+            'bayar' => $bayar,
             'kembali' => $kembali,
-            'kode_kasir' => $request->kode_kasir
+            'kode_kasir' => $request->kode_kasir ?? $jual->kode_kasir,
         ]);
 
         return new apiResource($jual, true, 'Data Berhasil Diupdate');
